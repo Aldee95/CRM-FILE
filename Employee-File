@@ -1,0 +1,842 @@
+function onOpen(){
+  // This line calls the SpreadsheetApp and gets its UI   
+  // Or DocumentApp or FormApp.
+  var ui = SpreadsheetApp.getUi(); 
+
+ui.createMenu('Employee Menu')
+      .addItem('Update Employees', 'update_employee')
+      .addSeparator().addItem('Get Employee Status', 'employee_info').addItem('Update Project Status','project_sheet_maker').addItem('Export employer Status','student_file_updater')
+      .addToUi();
+  
+};
+
+function employees_array(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet_i=ss.getSheetByName('Indian Employees');
+  var sheet_e=ss.getSheetByName('Edoofian Students');
+  var employees=[];
+  var i=6;
+  var j=6;
+  
+  while (sheet_e.getRange(i,1).getValue()!="" && i<300){
+    if((sheet_e.getRange(i,3).getValue()=='Working') || (sheet_e.getRange(i,3).getValue()=='Not working')){
+      Logger.log('i='.concat(i))
+      Logger.log('name='.concat(sheet_e.getRange(i,1).getValue()))
+      var employee={name:sheet_e.getRange(i,1).getValue(),source:'Edoofa',project1:sheet_e.getRange(i,4).getValue(),project2:sheet_e.getRange(i,5).getValue(),project3:sheet_e.getRange(i,6).getValue(),stipend:sheet_e.getRange(i,7).getValue(),credit:sheet_e.getRange(i,8).getValue(),status:sheet_e.getRange(i,3).getValue()};
+      employees.push(employee);
+    };
+    i++
+  };
+  while (sheet_i.getRange(j,1).getValue()!="" && j<300){
+    
+    if((sheet_i.getRange(j,3).getValue()=='Working')||(sheet_i.getRange(j,3).getValue()=='Not working')){
+      Logger.log('j='.concat(i))
+      Logger.log('name='.concat(sheet_e.getRange(j,1).getValue()))
+      var employee={name:sheet_i.getRange(j,1).getValue(),source:'Edoofa',project1:sheet_i.getRange(j,4).getValue(),project2:sheet_i.getRange(j,5).getValue(),project3:sheet_i.getRange(j,6).getValue(),stipend:sheet_i.getRange(j,7).getValue(),credit:sheet_i.getRange(j,8).getValue(),status:sheet_i.getRange(j,3).getValue()};
+      employees.push(employee);
+    };
+    j++;
+  };
+  Logger.log(employees);
+  return employees;
+};
+function sheet_populator(employees,project_object){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var cps=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(8,2).getValue()); 
+  var pst=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(9,2).getValue()); 
+  for (i=0;i<project_object.project_details.length;i++){
+    if(project_object.project_details[i].status=='Archived'){
+      var register=pst.getSheetByName('Project Information Storage')
+      for (q=2;q<302;q++){
+        Logger.log(q);
+        if(register.getRange(q,1).getValue()==project_object.project_details[i].name)
+        {var sheet=pst.getSheetByName(register.getRange(q,5).getValue());          
+        }
+      };
+    }
+    else{
+      var sheet=cps.getSheetByName(project_object.project_details[i].name)};
+    sheet.getRange(6,3,100,2).clear();
+    var k=6;
+    for (j=0;j<employees.length;j++){
+      if (employees[j].project1==project_object.project_details[i].name || employees[j].project2==project_object.project_details[i].name || employees[j].project3==project_object.project_details[i].name){
+        sheet.getRange(k,3).setValue(employees[j].name);
+        sheet.getRange(k,4).setValue(employees[j].source);
+        sheet.getRange(k,5).setValue(employees[j].status);
+        k++;
+      };
+    };
+  };
+};
+function sheet_populator_t(employees,project_object){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var cps=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(8,2).getValue()); 
+  var pst=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(9,2).getValue()); 
+  for (i=0;i<project_object.project_details.length;i++){
+    if(project_object.project_details[i].status=='Archived'){
+      var register=pst.getSheetByName('Project Information Storage')
+      for (q=2;q<302;q++){
+        Logger.log(q);
+        if(register.getRange(q,1).getValue()==project_object.project_details[i].name)
+        {var sheet=pst.getSheetByName(register.getRange(q,5).getValue().concat('_t'));          
+        }
+      };
+    }
+    else{
+      var sheet=cps.getSheetByName(project_object.project_details[i].name.concat('_t'))};
+    sheet.getRange(6,3,100,2).clear();
+    var k=6;
+    for (j=0;j<employees.length;j++){
+      if (employees[j].project1==project_object.project_details[i].name || employees[j].project2==project_object.project_details[i].name ||employees[j].project3==project_object.project_details[i].name){
+        sheet.getRange(k,3).setValue(employees[j].name);
+        sheet.getRange(k,4).setValue(employees[j].source);
+        sheet.getRange(k,5).setValue(employees[j].status);
+        k++;
+      };
+    };
+  };
+};
+  
+function project_details(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var projSheet=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(3,2).getValue()); 
+  var sche_sheet=projSheet.getSheetByName('Schedule Sheet backup');
+  var project_objects={project_details:[]};
+  var flag=sche_sheet.getRange(1,24).getValue();
+  var proj=[];
+  var i;
+  if(flag>0){
+    for (i=2;i<2+flag;i++){
+     
+      proj[i-2]={name:sche_sheet.getRange(i,1).getValue(),start_date:sche_sheet.getRange(i,2).getValue(),end_date:sche_sheet.getRange(i,3).getValue(),column:sche_sheet.getRange(i,4).getValue(),count_stasks:sche_sheet.getRange(i,5).getValue(),status:sche_sheet.getRange(i,6).getValue()}
+      project_objects.project_details.push(proj[i-2]);
+      
+    };
+  };
+  
+  return project_objects;
+};
+
+function backup(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var cps=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(8,2).getValue());
+  var pst=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(9,2).getValue());
+  var project_object=project_details();
+  Logger.log(project_object);
+  var employee_backup=[]
+  
+  for (i=0;i<project_object.project_details.length;i++){
+    Logger.log(project_object.project_details[i].name); 
+    if(project_object.project_details[i].status=='Archived'){
+      var register=pst.getSheetByName('Project Information Storage')
+      for (q=2;q<302;q++){
+        Logger.log(q);
+        if(register.getRange(q,1).getValue()==project_object.project_details[i].name)
+        {var cpsid=pst.getSheetByName(register.getRange(q,5).getValue());          
+         }
+      };
+    }
+    else{
+      var cpsid=cps.getSheetByName(project_object.project_details[i].name)};
+    var j=6;
+    var project_data=[];
+    while(cpsid.getRange(j,3).getValue()!="" && j<300){
+      
+      var data={name:cpsid.getRange(j,3).getValue(),rows:[]}
+      for (k=9;k<9+project_object.project_details[i].count_stasks;k++){
+        {
+          
+          var row={task:cpsid.getRange(4,k).getValue(),stask:cpsid.getRange(5,k).getValue(),value:cpsid.getRange(j,k).getValue()};
+          data.rows.push(row);
+        };
+      };
+      project_data.push(data);
+      
+      j++;
+    };
+    employee_backup.push(project_data);
+    
+  };
+  return employee_backup;
+};
+
+function backup_t(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var cps=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(8,2).getValue());
+  var pst=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(9,2).getValue());
+  var project_object=project_details();
+  var employee_backup=[]
+  
+  for (i=0;i<project_object.project_details.length;i++){
+    if(project_object.project_details[i].status=='Archived'){
+      var register=pst.getSheetByName('Project Information Storage')
+      for (q=2;q<302;q++){
+        Logger.log(q);
+        if(register.getRange(q,1).getValue()==project_object.project_details[i].name)
+        {var cpsid=pst.getSheetByName(register.getRange(q,5).getValue());          
+        }
+      };
+    }
+    else{
+      var cpsid=cps.getSheetByName(project_object.project_details[i].name.concat('_t'))};
+    var j=6;
+    var project_data=[];
+    while(cpsid.getRange(j,3).getValue()!="" && j<300){
+      
+      var data={name:cpsid.getRange(j,3).getValue(),rows:[]}
+      for (k=9;k<9+project_object.project_details[i].count_stasks;k++){
+        {
+          
+          var row={task:cpsid.getRange(4,k).getValue(),stask:cpsid.getRange(5,k).getValue(),value:cpsid.getRange(j,k).getValue()};
+          data.rows.push(row);
+        };
+      };
+      project_data.push(data);
+     
+      j++;
+    };
+    employee_backup.push(project_data);
+  };;
+  return employee_backup;
+};
+
+function call_backup(backup,project_object){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var cps=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(8,2).getValue());
+  var pst=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(9,2).getValue());
+  var j=6;
+  var project_objects=project_object;
+  for (i=0;i<project_object.project_details.length;i++){
+    
+    if(project_object.project_details[i].status=='Archived'){
+      var register=pst.getSheetByName('Project Information Storage')
+      for (q=2;q<302;q++){
+        Logger.log(q);
+        if(register.getRange(q,1).getValue()==project_object.project_details[i].name)
+        {var cpsid=pst.getSheetByName(register.getRange(q,5).getValue());          
+        }
+      };
+    }
+    else{
+      var cpsid=cps.getSheetByName(project_object.project_details[i].name)};
+    while(cpsid.getRange(j,3).getValue()!="" && j<300){
+      
+      for (k=0;k<backup[i].length;k++){
+        
+        if(cpsid.getRange(j,3).getValue()==backup[i][k].name){
+          for (l=9;l<9+project_object.project_details[i].count_stasks;l++){
+            
+            for (m=0;m<project_object.project_details[i].count_stasks;m++){
+             
+              if(cpsid.getRange(4,l).getValue()==backup[i][k].rows[m].task && cpsid.getRange(5,l).getValue()==backup[i][k].rows[m].stask && cpsid.getRange(5,l).getValue()!='Task Percentage Completed'){
+              cpsid.getRange(j,l).setValue(backup[i][k].rows[m].value);
+              };
+            };
+          };
+        };
+      };
+      j++;
+    };
+  };
+};
+function call_backup_t(backup,project_object){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var cps=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(8,2).getValue());
+  var pst=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(9,2).getValue());
+  var j=6;
+  var project_objects=project_object;
+  for (i=0;i<project_object.project_details.length;i++){
+  
+    if(project_object.project_details[i].status=='Archived'){
+      var register=pst.getSheetByName('Project Information Storage')
+      for (q=2;q<302;q++){
+        Logger.log(q);
+        if(register.getRange(q,1).getValue()==project_object.project_details[i].name.concat('_t'))
+        {var cpsid=pst.getSheetByName(register.getRange(q,5).getValue().concat('_t'));          
+        }
+      };
+    }
+    else{
+      var cpsid=cps.getSheetByName(project_object.project_details[i].name.concat('_t'))};
+    while(cpsid.getRange(j,3).getValue()!="" && j<300){
+    
+      for (k=0;k<backup[i].length;k++){
+        
+        if(cpsid.getRange(j,3).getValue()==backup[i][k].name){
+          for (l=9;l<9+project_object.project_details[i].count_stasks;l++){
+             
+            for (m=0;m<project_object.project_details[i].count_stasks;m++){
+               
+              if(cpsid.getRange(4,l).getValue()==backup[i][k].rows[m].task && cpsid.getRange(5,l).getValue()==backup[i][k].rows[m].stask && cpsid.getRange(5,l).getValue()!='Task Percentage Completed'){
+              cpsid.getRange(j,l).setValue(backup[i][k].rows[m].value);
+              };
+            };
+          };
+        };
+      };
+      j++;
+    };
+  };
+};
+
+function update_employee(){
+  var backup_array=backup();
+  var backup_array_t=backup_t();
+ 
+  var project_object=project_details();
+  
+  var employees=employees_array();
+  sheet_populator(employees,project_object);
+  sheet_populator_t(employees,project_object)
+  call_backup(backup_array,project_object);
+  call_backup_t(backup_array_t,project_object);
+};
+
+function insert_employees(){
+  var project_object=project_details();
+
+  var employees=employees_array();
+  
+ 
+  sheet_populator(employees,project_object);
+  sheet_populator_t(employees,project_object);
+};
+
+function employee_writer(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet=ss.getSheetByName('Current Employees Status File');
+  sheet.clear();
+  var employees=employees_array();
+  for (i=0;i<employees.length;i++){
+    if(employees[i].status=="Working"||employees[i].status=="Not working"){
+      sheet.getRange(i+6,1).setValue(employees[i].name);
+      sheet.getRange(i+6,2).setValue(employees[i].source);
+      sheet.getRange(i+6,3).setValue(employees[i].project1);
+      sheet.getRange(i+6,4).setValue(employees[i].project2);
+      sheet.getRange(i+6,4).setValue(employees[i].project3);
+    }
+  };
+  return employees;
+};
+function employee_writer_s(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet=ss.getSheetByName('Current Employees Status');
+  sheet.clear()
+  var employees=employees_array();
+  for (i=0;i<employees.length;i++){
+    if(employees[i].status=="Working" || employees[i].status=="Not working"){
+      sheet.getRange(i+6,1).setValue(employees[i].name);
+      sheet.getRange(i+6,2).setValue(employees[i].source);
+      sheet.getRange(i+6,3).setValue(employees[i].project1);
+      sheet.getRange(i+6,4).setValue(employees[i].project2);
+      sheet.getRange(i+6,4).setValue(employees[i].project3);
+    };
+  };
+  return employees;
+};
+              
+  function project_task_completions(){
+    var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+    var cps=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(8,2).getValue());
+    var pst=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(9,2).getValue());
+    var employee_details_array=[];
+    var completion_array=[];
+    var project_array=[];
+    var count=0;
+    var project_object=project_details();
+    Logger.log(project_object);
+    for (i=0;i<project_object.project_details.length;i++){
+      Logger.log('i='.concat(i));
+      if(project_object.project_details[i].status=='Archived'){
+        var register=pst.getSheetByName('Project Information Storage')
+        for (q=2;q<302;q++){
+          Logger.log(q);
+          if(register.getRange(q,1).getValue()==project_object.project_details[i].name)
+          {var cpsid=pst.getSheetByName(register.getRange(q,5).getValue());          
+           break;}
+        };
+      }
+      else{
+      var cpsid=cps.getSheetByName(project_object.project_details[i].name);     
+      var cpsid=cps.getSheetByName(project_object.project_details[i].name);
+      };
+      var project_c=project_completion(project_object.project_details[i].start_date,project_object.project_details[i].end_date);
+      Logger.log(project_c);
+      var projects_field_data={name:project_object.project_details[i].name,tasks:[]};
+      var j=6;
+      
+      var project_data={name:project_object.project_details[i].name,count_taskc:0,students_data:[]};
+    
+      while(j<6+cpsid.getRange(1+count,26).getValue()){
+        var l=0;
+        
+        var student_data={name:cpsid.getRange(j,3).getValue(),tasks:[]};
+        for(k=9;k<9+project_object.project_details[i].count_stasks;k++){
+          
+          if(cpsid.getRange(5,k).getValue()=='Task Percentage Completed'){
+            
+            if(j==6){
+              var temp={name:cpsid.getRange(4,k).getValue(),count:0 };
+            
+              projects_field_data.tasks.push(temp);
+              project_data.count_taskc++
+            };
+            var data={task_name:cpsid.getRange(4,k).getValue(),value:cpsid.getRange(j,k).getValue(),status:status(cpsid.getRange(j,k).getValue(),project_c)}; 
+            student_data.tasks.push(data);
+            
+              if(data.value>0){
+                
+               
+                projects_field_data.tasks[l].count++
+      
+              };
+            l++;
+           
+          };
+        };
+        project_data.students_data.push(student_data);
+        j++;
+      };
+      completion_array.push(project_data);
+      
+      project_array.push(projects_field_data);
+     
+    };
+    employee_details_array.push(completion_array);
+    employee_details_array.push(project_array);
+    Logger.log(completion_array);
+    return employee_details_array;
+  };
+
+function project_completion(start ,end){
+  var today=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4').getSheetByName('Current Spreasheets').getRange(1,5).getValue()
+  var present_day_count=today-start;
+  Logger.log(present_day_count)
+  if(today<=start)
+  {var present_day_count=0;}
+  var project_day_count=end-start+1;
+
+
+  var start_day=start%7;
+  
+  var present_day_sunday=Math.floor((today-start+start_day)/7)
+  
+  var project_day_sunday=Math.floor((end-start+start_day)/7)
+  var wd_present=present_day_count-present_day_sunday
+  Logger.log(wd_present)
+    
+  var wd_project=project_day_count-project_day_sunday
+  Logger.log(wd_project)
+  return (wd_present/wd_project);
+};
+  
+  
+  function status(value,task_c){
+  if(value==""){
+    return ""}
+  var val=value-task_c;
+  if(val<(-0.5)){
+    return "Red Alert";}
+  else if(val<(-0.4)){
+    return "Worse";}
+  else if(val<(-0.2)){
+    return "Bad";}
+  else if(val<(-0.1)){
+    return "Average";}
+  else if(val<(0.00)){
+    return "Good";}
+  else if(val>(0.05)){
+    return "Great";
+  };
+};
+  
+function project_writer(employee_details_array){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet=ss.getSheetByName('Current Employees Status File');
+  var k=5;
+  for (i=0;i<employee_details_array[1].length;i++){
+    for (j=0;j<employee_details_array[1][i].tasks.length;j++){
+      sheet.getRange(4,k).setValue(employee_details_array[1][i].name);
+      sheet.getRange(5,k).setValue(employee_details_array[1][i].tasks[j].name);
+      k++;}
+  };
+};
+function project_writer_s(employee_details_array){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet=ss.getSheetByName('Current Employees Status');
+  var k=5;
+  for (i=0;i<employee_details_array[1].length;i++){
+    for (j=0;j<employee_details_array[1][i].tasks.length;j++){
+      sheet.getRange(4,k).setValue(employee_details_array[1][i].name);
+      sheet.getRange(5,k).setValue(employee_details_array[1][i].tasks[j].name);
+      k++;}
+  };
+};    
+function project_writer_p(employee_details_array){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet=ss.getSheetByName('Project Wise Compilation');
+  sheet.getRange(6,1,300,30).clear();
+  var k=5;
+  for (i=0;i<employee_details_array[1].length;i++){
+    for (j=0;j<employee_details_array[1][i].tasks.length;j++){
+      sheet.getRange(4,k).setValue(employee_details_array[1][i].name);
+      sheet.getRange(5,k).setValue(employee_details_array[1][i].tasks[j].name);
+      k++;}
+  };
+};    
+function employees_details_writer(employee_details_array,employees){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet=ss.getSheetByName('Current Employees Status File');
+  var count=0;
+  var emp=employee_details_array;
+  
+  for (i=0;i<emp[0].length;i++){
+    Logger.log('i='.concat(i));
+    var j=6;
+    while (j<6+employees.length){
+      Logger.log('i='.concat(i,'j=',',',j));
+    if(sheet.getRange(j,3).getValue()!=emp[0][i].name && sheet.getRange(j,4).getValue()!=emp[0][i].name){
+      j++;}
+    else {
+      var f=0;
+      for(l=0;l<emp[0][i].students_data.length;l++){
+        Logger.log('i='.concat(i,'j=',',',j,'l=',',',l));
+      
+        if (f==0){
+          Logger.log('Founding');
+        if(sheet.getRange(j,1).getValue()==emp[0][i].students_data[l].name){
+          Logger.log('Found');
+          for (k=5+count;k<5+count+emp[0][i].count_taskc;k++)
+          {Logger.log('i='.concat(i,'j=',',',j,'l=',',',l,'k=',k));
+            sheet.getRange(j,k).setValue(emp[0][i].students_data[l].tasks[k-count-5].value)
+          f=1;}
+        };
+        }
+        else{break};
+      }
+      j++;
+    }
+      
+    };
+    count=count+emp[0][i].count_taskc;
+  }
+};
+function employees_details_writer_s(employee_details_array,employees){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet=ss.getSheetByName('Current Employees Status');
+  var count=0;
+  var emp=employee_details_array;
+  
+  for (i=0;i<emp[0].length;i++){
+    Logger.log('i='.concat(i));
+    var j=6;
+    while (j<6+employees.length){
+      Logger.log('i='.concat(i,'j=',',',j));
+    if(sheet.getRange(j,3).getValue()!=emp[0][i].name && sheet.getRange(j,4).getValue()!=emp[0][i].name){
+      j++;}
+    else {
+      var f=0;
+      for(l=0;l<emp[0][i].students_data.length;l++){
+        Logger.log('i='.concat(i,'j=',',',j,'l=',',',l));
+      
+        if (f==0){
+          Logger.log('Founding');
+        if(sheet.getRange(j,1).getValue()==emp[0][i].students_data[l].name){
+          Logger.log('Found');
+          for (k=5+count;k<5+count+emp[0][i].count_taskc;k++)
+          {Logger.log('i='.concat(i,'j=',',',j,'l=',',',l,'k=',k));
+            sheet.getRange(j,k).setValue(emp[0][i].students_data[l].tasks[k-count-5].status)
+          f=1;}
+        };
+        }
+        else{break};
+      }
+      j++;
+    }
+      
+    };
+    count=count+emp[0][i].count_taskc;
+  }
+};
+            
+        
+          
+          
+      
+  
+  
+  /*var j=6;
+  while ((sheet.getRange(j,1).getValue()!="" || sheet.getRange(j,1)!=null) && j<300){
+    Logger.log('j='.concat(j));    
+    for(i=0;i<emp[0].length;i++){
+      Logger.log('j='.concat(j,',','i=',i));
+      for (k=5;k<5+emp[0][i].count_taskc+count;k++){
+        var f=0;
+        Logger.log('j='.concat(j,',','i=',i,',','k=',k));
+        for (l=0;l<emp[0][i].students_data.length;){
+          Logger.log('j='.concat(j,',','i=',i,',','k=',k,',','l=',l));
+          if(emp[0][i].students_data[l].name==sheet.getRange(j,1).getValue()){
+            f=1;
+            for (m=0;m<emp[0][i].students_data[l].tasks.length;m++){
+               Logger.log('j='.concat(j,',','i=',i,',','k=',k,',','l=',l,',','m=',m));
+              if (emp[0][i].students_data[l].tasks[m].task_name==sheet.getRange(5,k).getValue()){
+                sheet.getRange(j,k).setValue(emp[0][i].students_data[l].tasks[m].value);
+              
+              }
+            };
+          };
+          if(f==0){l++}
+          else{break;};
+        };
+      };
+      count=count+emp[0][i].count_taskc;
+    };
+    j++;
+    }; */
+
+function employee_info(){
+  var employees=employee_writer();
+  var employees_s=employee_writer_s();
+  var employ_array=project_task_completions();
+  project_writer(employ_array);
+  project_writer_s(employ_array);
+  employees_details_writer(employ_array,employees);
+  employees_details_writer_s(employ_array,employees_s);
+};
+
+function project_task_details(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var projSheet=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(3,2).getValue()); 
+  var sche_sheet=projSheet.getSheetByName('Schedule Sheet backup');
+  var proj_data=projSheet.getSheetByName('Project Database Sheet');
+  var project_array=[];
+  for (i=2;i<2+sche_sheet.getRange(1,24).getValue();i++){
+    var project={name:sche_sheet.getRange(i,1).getValue(),start_date:sche_sheet.getRange(i,2).getValue(),end_date:sche_sheet.getRange(i,3).getValue(),count_stasks:sche_sheet.getRange(i,5).getValue(),stasks_details:[],status:sche_sheet.getRange(i,6).getValue()}
+    for(j=0;j<sche_sheet.getRange(i,5).getValue();j++){
+      if(proj_data.getRange(8+j,sche_sheet.getRange(i,4).getValue()).getValue()!=null && proj_data.getRange(8+j,sche_sheet.getRange(i,4).getValue()).getValue()!=''){
+        var stask_details={tname:proj_data.getRange(8+j,sche_sheet.getRange(i,4).getValue()).getValue(),stask:proj_data.getRange(8+j,sche_sheet.getRange(i,4).getValue()+1).getValue(),stask_mp:proj_data.getRange(8+j,sche_sheet.getRange(i,4).getValue()+5).getValue(),stask_tt:proj_data.getRange(8+j,sche_sheet.getRange(i,4).getValue()+4).getValue()}
+        project.stasks_details.push(stask_details);
+      };
+    };
+    project_array.push(project);
+  };
+  Logger.log(project_array);
+  return project_array;
+};
+
+function project_detailer(project_array,employees){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var cps=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(8,2).getValue());
+  var pst1=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(9,2).getValue());
+  var pst2=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(10,2).getValue());
+  var register=pst1.getSheetByName('Project Information Storage')
+  var project_detailer_array=[]
+  var pr=project_array;
+  var emp=employees;
+  for (i=0;i<pr.length;i++){
+ /*   Logger.log('i='.concat(i)) */
+    if(pr[i].status=='Archived'){
+      for (q=2;q<302;q++){
+        if(register.getRange(q,1).getValue()==pr[i].name){
+          if(q<80){
+            var cpsid=pst1.getSheetByName(register.getRange(q,5).getValue());
+            var cpsid_t=pst1.getSheetByName(register.getRange(q,5).getValue().concat('_t'));
+          }
+          else{
+            var cpsid=pst2.getSheetByName(register.getRange(q,5).getValue());
+            var cpsid_t=pst2.getSheetByName(register.getRange(q,5).getValue().concat('_t'));
+          }
+          break;
+        }
+      }
+    }
+    else{
+    var cpsid=cps.getSheetByName(pr[i].name)
+    var cpsid_t=cps.getSheetByName(pr[i].name.concat('_t'));};
+    
+    var stasks=[]
+    var count2=0
+    Logger.log(emp.length);
+    for (j=6;j<6+emp.length;){
+      var l=0;
+      var count=0
+      
+     /* Logger.log('j='.concat(j));
+      
+      Logger.log('i='.concat(i,',','l=',l,',','j=',j))*/
+      if(emp[j-6].project1==pr[i].name || emp[j-6].project2==pr[i].name || emp[j-6].project3==pr[i].name){
+        Logger.log('condition ');
+        while (l<pr[i].count_stasks-count){
+          if(cpsid.getRange(5,l+9+count).getValue()=='Task Percentage Completed'){
+            count++;}
+          else if(j-count2>5){
+            if(j-count2==6){
+              Logger.log('making new stask');
+              var stask={task:cpsid.getRange(4,l+9+count).getValue(),stask:cpsid.getRange(5,l+9+count).getValue(),assn_t:0,mp_count:0,comp_t:0};
+              stasks.push(stask);
+            }
+            if(cpsid.getRange(j-count2,l+9+count).getValue()>0 && cpsid_t.getRange(j-count2,l+9+count).getValue()>0){
+              Logger.log('Adding element to stask');
+              stasks[l].comp_t=stasks[l].comp_t+cpsid.getRange(j-count2,l+9+count).getValue();
+              if(cpsid.getRange(j-count2,5).getValue()=="Working"){
+              stasks[l].mp_count=stasks[l].mp_count+1;
+              stasks[l].assn_t=stasks[l].assn_t+cpsid_t.getRange(j-count2,l+9+count).getValue();
+              }
+            };
+            l++;
+          };
+        }
+        j++;
+      } 
+      else{j++;
+           count2++};
+    };
+    project_detailer_array.push(stasks);
+  };
+  Logger.log(project_detailer_array);
+  return project_detailer_array;
+};
+
+function project_sheet_maker(){
+  var project_array=project_task_details();
+  Logger.log('1');
+  var employees=employees_array();
+  Logger.log('2');
+  var detailer=project_detailer(project_array,employees);
+  project_doodler(project_array,detailer)
+};
+
+function project_doodler(project_array,detailer){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sheet=ss.getSheetByName('Project Wise Compilation');
+  sheet.clear();
+  var pa=project_array;
+  Logger.log(detailer);
+  for (i=0;i<pa.length;){
+    Logger.log(i);
+    if(pa[i].status=='Archived'){
+      Logger.log(i);
+      i++;
+    }
+    else{
+      Logger.log(i);
+      sheet.getRange(3,12*i+1).setValue('Project Name');
+      sheet.getRange(3,12*i+2).setValue('Task Name');
+      sheet.getRange(3,12*i+3).setValue('Sub task Name');
+      sheet.getRange(3,12*i+4).setValue('Manpower Decided');
+      sheet.getRange(3,12*i+5).setValue('Total Target');
+      sheet.getRange(3,12*i+6).setValue('Manpower Working');
+      sheet.getRange(3,12*i+7).setValue('Assigned target');
+      sheet.getRange(3,12*i+8).setValue('Completed target');
+      sheet.getRange(3,12*i+9).setValue('Manpower deficiency')
+      sheet.getRange(3,12*i+10).setValue('Relaxation target percentage');
+      sheet.getRange(3,12*i+11).setValue('Target Completion');
+      for(j=0;j<pa[i].stasks_details.length;j++){
+        sheet.getRange(4+j,12*i+1).setValue(pa[i].name);
+        sheet.getRange(4+j,12*i+2).setValue(pa[i].stasks_details[j].tname);
+        sheet.getRange(4+j,12*i+3).setValue(pa[i].stasks_details[j].stask);
+        sheet.getRange(4+j,12*i+4).setValue(pa[i].stasks_details[j].stask_mp);
+        sheet.getRange(4+j,12*i+5).setValue(pa[i].stasks_details[j].stask_tt);
+        sheet.getRange(4+j,12*i+6).setValue(detailer[i][j].mp_count);
+        sheet.getRange(4+j,12*i+7).setValue(detailer[i][j].assn_t);
+        sheet.getRange(4+j,12*i+8).setValue(detailer[i][j].comp_t);
+        sheet.getRange(4+j,12*i+9).setValue(pa[i].stasks_details[j].stask_mp-detailer[i][j].mp_count)
+        sheet.getRange(4+j,12*i+10).setValue((detailer[i][j].assn_t-pa[i].stasks_details[j].stask_tt)/pa[i].stasks_details[j].stask_tt);
+        sheet.getRange(4+j,12*i+11).setValue(detailer[i][j].comp_t/pa[i].stasks_details[j].stask_tt);
+      };
+      i++;
+    };
+  }; 
+}; 
+
+function employee_writer_1(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(4,2).getValue());
+  var sheet=ss.getSheetByName('Project Sheet');
+  var employees=employees_array();
+  for (i=0;i<employees.length;i++){
+    sheet.getRange(i+6,1).setValue(employees[i].name);
+    sheet.getRange(i+6,2).setValue(employees[i].source);
+    sheet.getRange(i+6,3).setValue(employees[i].project1);
+    sheet.getRange(i+6,4).setValue(employees[i].project2)
+    sheet.getRange(i+6,4).setValue(employees[i].project3);
+  };
+  return employees;
+};
+
+function project_writer_1(employee_details_array){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(4,2).getValue());
+  var sheet=ss.getSheetByName('Project Sheet');
+  var k=5;
+  for (i=0;i<employee_details_array[1].length;i++){
+    for (j=0;j<employee_details_array[1][i].tasks.length;j++){
+      sheet.getRange(4,k).setValue(employee_details_array[1][i].name);
+      sheet.getRange(5,k).setValue(employee_details_array[1][i].tasks[j].name);
+      k++;}
+  };
+};
+        
+function employees_details_writer_1(employee_details_array,employees){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var ss=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(4,2).getValue());
+  var sheet=ss.getSheetByName('Project Sheet');
+  var count=0;
+  var emp=employee_details_array;
+  
+  for (i=0;i<emp[0].length;i++){
+    Logger.log('i='.concat(i));
+    var j=6;
+    while (j<6+employees.length){
+      Logger.log('i='.concat(i,'j=',',',j));
+    if(sheet.getRange(j,3).getValue()!=emp[0][i].name && sheet.getRange(j,4).getValue()!=emp[0][i].name){
+      j++;}
+    else {
+      var f=0;
+      for(l=0;l<emp[0][i].students_data.length;l++){
+        Logger.log('i='.concat(i,'j=',',',j,'l=',',',l));
+      
+        if (f==0){
+          Logger.log('Founding');
+        if(sheet.getRange(j,1).getValue()==emp[0][i].students_data[l].name){
+          Logger.log('Found');
+          for (k=5+count;k<5+count+emp[0][i].count_taskc;k++)
+          {Logger.log('i='.concat(i,'j=',',',j,'l=',',',l,'k=',k));
+            sheet.getRange(j,k).setValue(emp[0][i].students_data[l].tasks[k-count-5].value)
+          f=1;}
+        };
+        }
+        else{break};
+      }
+      j++;
+    }
+      
+    };
+    count=count+emp[0][i].count_taskc;
+  }
+};                                
+                  
+    
+function student_file_updater(){
+  var employees=employee_writer_1();
+  var employ_array=project_task_completions();
+  project_writer_1(employ_array);
+  employees_details_writer_1(employ_array,employees);
+};
+  
+              
+              
+              
+              
+              
+              
+              
