@@ -1,0 +1,198 @@
+function income_fetch(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var acs=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(11,2).getValue());
+  var pdata=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(3,2).getValue());
+  var sms=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(4,2).getValue());
+  var ias=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(5,2).getValue());
+  var sds=sms.getSheetByName('Data Sheet');
+  var pds=pdata.getSheetByName('Project Database Sheet');
+  var cds=acs.getSheetByName('Key');
+  var isf=ias.getSheetByName('Indian Employees');
+  var list=[]
+  for (i=3;i<3+sds.getRange(1,2).getValue();i++){
+    list.push(sds.getRange(i,2).getValue());
+  };
+  for (j=4;j<4+pds.getRange(1,2).getValue();j++){
+    list.push(pds.getRange(j,1).getValue());
+  };
+  for (l=6;l<6+isf.getRange(1,25).getValue();l++){
+    list.push(pds.getRange(l,1).getValue());
+  };
+  for (k=0;k<list.length;k++)
+  {cds.getRange(3+k,1).setValue(list[k]);}
+};
+    
+function onEdit(e){
+  var sheet=e.range.getSheet().getName();
+  var col=e.range.getColumn();
+  var row=e.range.getRow();
+  var val=e.range.getValue();
+  var sheet1=SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet);
+  if(sheet=='Student Status' && col==3 && val=='Yes'){
+    sheet1.getRange(row,7).setValue(new Date);
+  };
+  if(sheet=='Student Status' && col==4 && val=='Yes'){
+    sheet1.getRange(row,8).setValue(new Date);
+  };
+};
+
+function scholarship_fetch(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var acs=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(11,2).getValue());
+  var exp=acs.getSheetByName('Expenditure');
+  var student_sch=[];
+  for (i=2;i<2+exp.getRange(1,25).getValue();i++){
+    if(exp.getRange(i,2).getValue()=='Scholarship Credits to Edoofian'){
+      var flag=0;
+      if(student_sch.length>0){
+        Logger.log('FInding');
+        for(j=0;j<student_sch.length;j++){
+          Logger.log('Searching')
+          if (student_sch[j].name==exp.getRange(i,1).getValue()){
+            Logger.log('Got it');
+            var data={month:exp.getRange(i,5).getValue(),credits:exp.getRange(i,8).getValue()};
+            student_sch[j].datas.push(data);
+            flag=1;
+            Logger.log('Flag Value',flag);
+          };
+        };
+      };
+      if (flag==0){
+        
+        var student={name:exp.getRange(i,1).getValue(),datas:[]};
+        var data={month:exp.getRange(i,5).getValue(),credits:exp.getRange(i,8).getValue()}; 
+        student.datas.push(data); 
+        student_sch.push(student);
+      };
+    };
+  };
+  Logger.log(student_sch);
+  return student_sch;
+};
+function student_sch_writer(){
+  var ms=SpreadsheetApp.openById('1Y2-_9DAon0JzOgIqsbYGao2KBNKfpJ9PO6CFOHZmyd4');
+  var sif=SpreadsheetApp.openById(ms.getSheetByName('Current Spreasheets').getRange(4,2).getValue());
+  var student_sch=scholarship_fetch();
+  Logger.log(student_sch);
+  var sis=sif.getSheetByName('Scholarship Details File')
+  for (i=2;i<2+student_sch.length;i++){
+    sis.getRange(i,1).setValue(student_sch[i-2].name);
+    for (j=0;j<student_sch[i-2].datas.length;j++){
+      for (k=3;k<33;k++){
+        Logger.log('i='.concat(i,'j=',j,'k=',k));
+        var date11=sis.getRange(1,k).getValue();
+        var date21=student_sch[i-2].datas[j].month
+        var date1=date11.getTime();
+        var date2=date21.getTime();
+       
+        if(date2==date1){
+          Logger.log('i='.concat(i,'j=',j,'k=',k,'Approved'));
+          sis.getRange(i,k).setValue(student_sch[i-2].datas[j].credits)};
+      }
+    };
+  };
+};
+
+function slip_data(row1,sheetn){
+  var ss=SpreadsheetApp.openById('1UIS4ymqz0feLLe55_43qGl7Mu1HJ97oNeTG7S3za-p0');
+  var sheet= ss.getSheetByName(sheetn)
+  var row=row1;
+  if(sheet.getName()=='Enrolled Students'){
+    var type={type:'Registration',name:sheet.getRange(row,1).getValue(),payment_amount:sheet.getRange(row,5).getValue(),payment_date:sheet.getRange(row,3).getValue(),currency:sheet.getRange(row,4).getValue(),registered_id:sheet.getRange(row,2).getValue()}
+    }
+  else if(sheet.getName()=='Registered Students'){
+    var type={type:'Enrolment',name:sheet.getRange(row,1).getValue(),payment_amount:sheet.getRange(row,19).getValue(),payment_date:sheet.getRange(row,18).getValue(),currency:sheet.getRange(row,5).getValue(),registered_id:sheet.getRange(row,2).getValue(),college:sheet.getRange(row,3).getValue(),course:sheet.getRange(row,4).getValue(),total_fee:sheet.getRange(row,17).getValue(),registration_fee:sheet.getRange(row,10).getValue(),leftout_fee:sheet.getRange(row,16).getValue()+sheet.getRange(row,13).getValue()}
+    }
+  return make_slip(type);
+}
+
+function make_slip(type){
+  var scs=SpreadsheetApp.openById('1UIS4ymqz0feLLe55_43qGl7Mu1HJ97oNeTG7S3za-p0')
+  if (type.type=='Enrolment'){
+    var sheet=scs.getSheetByName('Enrolment');
+  }
+  else if (type.type=='Registration'){
+    var sheet=scs.getSheetByName('Registration');
+  }
+  else {
+    return 'Error in Input'
+  }
+  var sal=sheet.getRange(5,1).getValue();
+  sal=sal.replace('Name',type.name);
+  sheet.getRange(5,1).setValue(sal);
+  if(type.currency=='Rupees'){
+    var cmark='₹'}
+  else{
+    var cmark='$'}
+  var amt= cmark.concat(type.payment_amount)
+  var txt=sheet.getRange(1,6).getValue()
+  txt=txt.replace('Amt.',amt);
+  sheet.getRange(6,1).setValue(txt)
+  sheet.getRange(8,2).setValue(type.name)
+  sheet.getRange(10,2).setValue(type.registered_id)
+  sheet.getRange(11,2).setValue(amt)
+  sheet.getRange(12,2).setValue(type.payment_date)
+  sheet.getRange(12,2).setNumberFormat('dd mmm yyyy');
+  sheet.getRange(13,3).setValue(type.currency)
+  var link= generatepdf(scs.getId(),type.name.concat(" ",type.type),type.type)
+  sal=sal.replace(type.name,'Name')
+  txt=txt.replace(amt,'Amt.')
+  sheet.getRange(6,1).setValue(txt)
+  sheet.getRange(5,1).setValue(sal);
+  
+  return link;
+  
+  }
+
+
+function generatepdf(id,name,type) {
+
+  if (id === '') {
+    
+    SpreadsheetApp.getUi().alert('ID needs to be defined in code.gs')
+    return
+  }
+
+  // Set up the docs and the spreadsheet access
+  Logger.log(id)
+  Logger.log(type)
+  var copyFile = DriveApp.getFileById(id).makeCopy(),
+      copyId = copyFile.getId(),
+      copyDoc = DocumentApp.openById(copyId),
+      copyBody = copyDoc.getActiveSection()
+  if (type=='Enrolment'){var activeSheet = SpreadsheetApp.openById(id).getSheetByName('Enrolment')}
+  else{ var activeSheet=SpreadsheetApp.openById(id).getSheetByName('Registration')}
+  var numberOfColumns = activeSheet.getLastColumn(),
+      activeRowIndex = activeSheet.getActiveRange().getRowIndex(),
+      activeRow = activeSheet.getRange(activeRowIndex, 1, 1, numberOfColumns).getValues(),
+      headerRow = activeSheet.getRange(1, 1, 1, numberOfColumns).getValues(),
+      columnIndex = 0
+  
+  // Replace the keys with the spreadsheet values
+ 
+  for (;columnIndex < headerRow[0].length; columnIndex++) {
+    
+    copyBody.replaceText('%' + headerRow[0][columnIndex] + '%', 
+                         activeRow[0][columnIndex])                         
+  }
+  
+  // Create the PDF file, rename it if required and delete the doc copy
+    
+  copyDoc.saveAndClose()
+
+  var newFile = DriveApp.createFile(copyFile.getAs('application/pdf'))  
+  var rid=newFile.getDownloadUrl();
+
+  if (name !== '') {
+  
+    newFile.setName(name)
+  } 
+  
+  copyFile.setTrashed(true)
+  return rid;
+} // createPdf()
+  
+  
+
+        
+  
